@@ -1,4 +1,6 @@
-### Hi there 👋
+Hey there! 👋 I'm someone who thrives both as a collaborative team player and as an independent contributor. 💪 Over the past few months, I've been diving deep into refining my skills in React, Node.js, TypeScript, JavaScript, HTML, CSS, and SCSS. 🚀 Additionally, I have a solid proficiency in Python, especially when working with its Pygame libraries in previous projects. 🐍 My commitment to continuous improvement shines through in my daily dedication of over 8 hours to deeply understand the ins and outs of these technologies. 💡 Drawing from my lifelong passion for gaming 🎮, I've often found myself customizing application files and values to better suit my preferences.
+
+Beyond coding, I've had the opportunity to serve as an instructor in an event agency. 🎉 Successfully leading teams through unforeseen challenges, this experience has honed my ability to collaborate effectively and ensure clear communication, even in ambiguous situations. 🤝 As a dedicated gamer, my ultimate goal is to channel my passion for games into creating them. Whether they're simple clickers that engage users while a page loads or more complex and entertaining projects, I'm excited to contribute to the gaming industry's vibrant community! 🌟
 
 <!--
 **Barosz30/Barosz30** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
