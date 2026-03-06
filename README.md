@@ -1,3 +1,26 @@
-Hey there! 👋 I'm someone who thrives both as a collaborative team player and as an independent contributor. 💪 Over the past few months, I've been diving deep into refining my skills in React, Node.js and TypeScript 🚀 I have a solid proficiency in Python, especially when working with its Pygame libraries in previous projects. 🐍 My commitment to continuous improvement shines through in my daily dedication to deeply understand the ins and outs of these technologies. 💡 Drawing from my lifelong passion for gaming 🎮, I've often found myself customizing application files and values to better suit my preferences.
+# Cześć, jestem Mirosław! 👋
 
-Beyond coding, I've had the opportunity to serve as an instructor in an event agency. 🎉 Successfully leading teams through unforeseen challenges, this experience has honed my ability to collaborate effectively and ensure clear communication, even in ambiguous situations. 🤝 As a dedicated gamer, my ultimate goal is to channel my passion for games into creating them. Whether they're simple clickers that engage users while a page loads or more complex and entertaining projects, I'm excited to contribute to the gaming industry's vibrant community! 🌟
+### Full-stack Developer
+
+Jestem programistą, który najlepiej czuje się w ekosystemie **TypeScript**, budując skalowalne aplikacje webowe oraz eksplorując świat tworzenia gier. Moje doświadczenie jako instruktor w agencji eventowej nauczyło mnie jasnej komunikacji i sprawnego zarządzania zespołem w dynamicznych warunkach.
+
+---
+
+### 🚀 Co u mnie słychać?
+- 🔭 Obecnie rozwijam: **MechaShop** (Full-stack e-commerce w Angularze i Nest.js).
+- 🌱 Stale zgłębiam: Nowe technologie i języki.
+- 🎮 Hobby: Tworzenie gier i siłownia.
+
+---
+
+### 📊 Statystyki GitHub
+<p align="left">
+<img height="180em" src="https://github-readme-stats.vercel.app/api?username=Barosz30&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true" />
+<img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Barosz30&layout=compact&theme=tokyonight&hide=html,css" />
+</p>
+
+---
+
+### 📫 Znajdziesz mnie tutaj:
+[![LinkedIn](https://www.linkedin.com/in/miros%C5%82aw-wandyk-279b9b1a2/)](TWÓJ_LINK_DO_LINKEDINA)
+[![Portfolio](https://barosz30.github.io/Portfolio/)](LINK_DO_PORTFOLIO)
