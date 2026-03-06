@@ -15,4 +15,5 @@ Jestem programistą, który najlepiej czuje się w ekosystemie **TypeScript**, b
 
 ### 📫 Znajdziesz mnie tutaj:
 LinkedIn -> (https://www.linkedin.com/in/miros%C5%82aw-wandyk-279b9b1a2/)
+
 Portfolio -> (https://barosz30.github.io/Portfolio/)]
