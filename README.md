@@ -11,7 +11,6 @@ I’m a firm believer in the "Agentic" workflow—leveraging AI tools like **Cur
 ### 🚀 At a Glance
 * **Performance Driven**: Optimized Web Core Vitals to a perfect **100/100** score for production apps.
 * **Business Impact**: Reduced client operational costs by **24%** through advanced booking and payment systems.
-* **Current Focus**: Building **MechaShop** (a full-stack e-commerce engine) and developing MedTech ecosystems at **DanCorp**.
 * **Background**: My experience as an instructor and mentor allows me to simplify complex technical problems and lead teams with clear communication.
 
 ---
