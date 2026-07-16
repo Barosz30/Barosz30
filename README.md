@@ -2,7 +2,7 @@
 
 ### Full-Stack Engineer | AI & Performance Enthusiast 
 
-I am a software engineer with over **2 years of experience** building modern, scalable web systems. My focus lies in the **TypeScript** ecosystem, where I bridge the gap between robust backend architectures (Nest.js) and high-performance frontends (Next.js/React 19). 
+I am a software engineer with over **3 years of experience** building modern, scalable web systems. My focus lies in the **TypeScript** ecosystem, where I bridge the gap between robust backend architectures (Nest.js) and high-performance frontends (Next.js/React 19). 
 
 I’m a firm believer in the "Agentic" workflow—leveraging AI tools like **Cursor** to accelerate delivery by up to **50%** without sacrificing code quality.
 
