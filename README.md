@@ -21,7 +21,7 @@ I’m a firm believer in the "Agentic" workflow—leveraging AI tools like **Cur
 | **Languages** | TypeScript, JavaScript, Python  |
 | **Frontend** | React 19, Next.js, Angular, Vue, Redux  |
 | **Backend** | Node.js, Nest.js, Express, PostgreSQL, MongoDB  |
-| **DevOps/Cloud** | AWS, Docker, Kubernetes, Terraform, GitHub Actions  |
+| **DevOps/Cloud** | AWS, Docker, GitHub Actions  |
 | **AI Tools** | OpenAI API, Cursor, Prompt Engineering  |
 
 ---
