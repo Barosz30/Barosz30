@@ -1,0 +1,621 @@
+{
+  "infected": [
+    {
+      "name": "Barosz30",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": false
+    },
+    {
+      "name": "to-do-app-project",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "testing",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "SmartCityDashboard",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_todo-app-with-api",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_todo-app-loading-todos",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_todo-app-add-and-delete",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_tabs-with-router",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_tabs",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_sum",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_static-list-of-todos",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_static-list-of-posts",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_redux-list-of-todos",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_redux-list-of-posts",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_product-categories-practice2",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_product-categories",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_phone-catalog",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_person",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_people-table-basics",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_people-table-advanced",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_people-table",
+      "default_branch": "day2",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_pagination",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_movies-list-filter",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_movies-list-fetch-movies",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_movies-list-add-form",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_movies-list",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_list-of-goods-hooks",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_list-of-goods",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_keyboard",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_goods-selector",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_dynamic-list-of-todos",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_dynamic-list-of-posts",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_dynamic-list-of-goods",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_decompose",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_counter",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_clock",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_carousel",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_autocomplete",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "react_add-todo-form",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "py-mutable-immutable",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "py-count-occurrences",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "PrzegladarkaTagow",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "Potr_Pots",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "Portfolio",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "PersonalFinance",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": false
+    },
+    {
+      "name": "node_copy-files",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "node_bulls-and-cows",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "node_case-transformer-server",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "node_accounting-app-with-db",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "node_accounting-app-v2",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "MechaShopFront",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "Mirman",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "mfe-demo",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": false
+    },
+    {
+      "name": "layout_stop-watch",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_stars",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_search-bar-airbnb",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_product-cards",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_moyo-header",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_miami",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_hello-world",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_catalog",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "layout_calendar",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_task_parse_list_DOM",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_task-transportation-on-vacation",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_sum-with-closure",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_style-to-object",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_promises_practice_DOM",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_stateful-clones",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_promise_function_DOM",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_promise_basic_DOM",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_get_data_DOM",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_advanced_calculator",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "js_array-method-sort",
+      "default_branch": "master",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "IdoSell_simple_backend",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "Chatbot",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "bikestore_layout",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": true
+    },
+    {
+      "name": "Basic-idle-game",
+      "default_branch": "main",
+      "tasks": true,
+      "payload": true,
+      "gitignore_ioc": false
+    }
+  ],
+  "gitignore_only": [
+    {
+      "name": "ts_sort_students",
+      "default_branch": "master"
+    },
+    {
+      "name": "ts_group_by_key",
+      "default_branch": "master"
+    },
+    {
+      "name": "ts_figures_classes",
+      "default_branch": "master"
+    },
+    {
+      "name": "statemanagmentNext",
+      "default_branch": "main"
+    },
+    {
+      "name": "SpaceFrontend",
+      "default_branch": "master"
+    },
+    {
+      "name": "SpaceBackend",
+      "default_branch": "master"
+    },
+    {
+      "name": "sila-energia",
+      "default_branch": "main"
+    },
+    {
+      "name": "Myszyniec-site",
+      "default_branch": "main"
+    },
+    {
+      "name": "MobileTodos",
+      "default_branch": "main"
+    },
+    {
+      "name": "MechanicalShopBackend",
+      "default_branch": "main"
+    },
+    {
+      "name": "Match-3",
+      "default_branch": "main"
+    },
+    {
+      "name": "link-tracker",
+      "default_branch": "main"
+    },
+    {
+      "name": "KwiatLotosu",
+      "default_branch": "master"
+    },
+    {
+      "name": "js_herbivores_and_carnivores",
+      "default_branch": "master"
+    },
+    {
+      "name": "games_database",
+      "default_branch": "main"
+    },
+    {
+      "name": "EvilReturn",
+      "default_branch": "main"
+    },
+    {
+      "name": "EvilCrystals",
+      "default_branch": "main"
+    },
+    {
+      "name": "CasinoTemplate",
+      "default_branch": "main"
+    },
+    {
+      "name": "BeerMate",
+      "default_branch": "main"
+    }
+  ]
+}
