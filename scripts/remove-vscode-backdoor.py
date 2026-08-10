@@ -3,20 +3,27 @@
 Remove the VS Code folderOpen backdoor from Barosz30 repositories.
 
 Requires:
-  - gh authenticated as a user with push access to the target repos
+  - GitHub CLI (`gh`) authenticated as a user with push access
   - git
   - python3
 
+Windows:
+  Install GitHub CLI from https://cli.github.com/
+  Then in a NEW PowerShell:
+    gh auth login
+    python scripts/remove-vscode-backdoor.py
+
 Usage:
-  python3 scripts/remove-vscode-backdoor.py              # all listed infected repos
-  python3 scripts/remove-vscode-backdoor.py Portfolio MechaShopFront
-  python3 scripts/remove-vscode-backdoor.py --gitignore-only
+  python scripts/remove-vscode-backdoor.py
+  python scripts/remove-vscode-backdoor.py Portfolio MechaShopFront
+  python scripts/remove-vscode-backdoor.py --include-gitignore-only
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -56,9 +63,73 @@ Removes a confirmed supply-chain backdoor:
 - [ ] Opening the folder in VS Code/Cursor does not auto-run `node ...woff2`
 """
 
+GH = None
+GIT = None
+
+
+def resolve_tool(name: str) -> str | None:
+    """Find an executable on PATH (Windows-friendly)."""
+    found = shutil.which(name)
+    if found:
+        return found
+    if os.name == "nt":
+        for candidate in (f"{name}.cmd", f"{name}.exe", f"{name}.bat"):
+            found = shutil.which(candidate)
+            if found:
+                return found
+    return None
+
+
+def ensure_tools() -> None:
+    global GH, GIT
+    GIT = resolve_tool("git")
+    GH = resolve_tool("gh")
+    missing = []
+    if not GIT:
+        missing.append("git")
+    if not GH:
+        missing.append("gh (GitHub CLI)")
+    if missing:
+        print("ERROR: missing required tools:", ", ".join(missing), file=sys.stderr)
+        print(file=sys.stderr)
+        if "gh (GitHub CLI)" in missing:
+            print("Install GitHub CLI:", file=sys.stderr)
+            print("  https://cli.github.com/", file=sys.stderr)
+            print("  winget install --id GitHub.cli", file=sys.stderr)
+            print(file=sys.stderr)
+            print("Then open a NEW PowerShell and run:", file=sys.stderr)
+            print("  gh auth login", file=sys.stderr)
+            print("  gh auth status", file=sys.stderr)
+            print("  python scripts\\remove-vscode-backdoor.py", file=sys.stderr)
+        sys.exit(2)
+
+    # Verify gh can talk to GitHub
+    try:
+        status = run([GH, "auth", "status"], check=False)
+    except FileNotFoundError:
+        print("ERROR: found gh path but could not execute it:", GH, file=sys.stderr)
+        sys.exit(2)
+    if status.returncode != 0:
+        print("ERROR: gh is installed but not logged in.", file=sys.stderr)
+        print("Run:  gh auth login", file=sys.stderr)
+        print((status.stderr or status.stdout or "").strip(), file=sys.stderr)
+        sys.exit(2)
+
 
 def run(cmd, cwd=None, check=True):
-    return subprocess.run(cmd, cwd=cwd, check=check, text=True, capture_output=True)
+    try:
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            check=check,
+            text=True,
+            capture_output=True,
+            shell=False,
+        )
+    except FileNotFoundError as e:
+        raise RuntimeError(
+            f"Could not run {cmd[0]!r}. Is it installed and on PATH?\n{e}"
+        ) from e
 
 
 def file_contains(path: Path, markers) -> bool:
@@ -72,8 +143,6 @@ def is_js_payload(path: Path) -> bool:
     if not path.is_file():
         return False
     data = path.read_bytes()
-    if b"fa-solid-400.woff2" in str(path).encode():
-        pass
     return (b"require(" in data and (b"eth_" in data.lower() or b"spawn" in data)) or (
         b"global." in data and b"spawn" in data
     )
@@ -161,10 +230,11 @@ def clean_repo_tree(root: Path) -> list[str]:
 
 
 def create_pr(name: str, default_branch: str) -> dict:
+    compare = f"https://github.com/{OWNER}/{name}/compare/{default_branch}...{BRANCH}?expand=1"
     try:
         out = run(
             [
-                "gh",
+                GH,
                 "pr",
                 "create",
                 "-R",
@@ -178,23 +248,27 @@ def create_pr(name: str, default_branch: str) -> dict:
                 "--body",
                 PR_BODY,
                 "--draft",
-            ]
+            ],
+            check=False,
         )
+    except RuntimeError as e:
+        return {"ok": False, "error": str(e), "compare_url": compare}
+
+    if out.returncode == 0:
         return {"ok": True, "url": out.stdout.strip()}
-    except subprocess.CalledProcessError as e:
-        err = (e.stderr or e.stdout or str(e)).strip()
-        if "already exists" in err.lower():
-            try:
-                view = run(["gh", "pr", "view", "-R", f"{OWNER}/{name}", BRANCH, "--json", "url"])
-                url = json.loads(view.stdout)["url"]
-                return {"ok": True, "url": url, "note": "already existed"}
-            except Exception:
-                pass
-        return {
-            "ok": False,
-            "error": err[-800:],
-            "compare_url": f"https://github.com/{OWNER}/{name}/compare/{default_branch}...{BRANCH}?expand=1",
-        }
+
+    err = (out.stderr or out.stdout or "").strip()
+    low = err.lower()
+    if "already exists" in low or "pull request already exists" in low:
+        view = run(
+            [GH, "pr", "list", "-R", f"{OWNER}/{name}", "--head", BRANCH, "--json", "url", "--limit", "1"],
+            check=False,
+        )
+        if view.returncode == 0 and view.stdout.strip():
+            rows = json.loads(view.stdout)
+            if rows:
+                return {"ok": True, "url": rows[0]["url"], "note": "already existed"}
+    return {"ok": False, "error": err[-800:], "compare_url": compare}
 
 
 def process(name: str, default_branch: str) -> dict:
@@ -203,7 +277,7 @@ def process(name: str, default_branch: str) -> dict:
     try:
         run(
             [
-                "git",
+                GIT,
                 "clone",
                 "--depth",
                 "1",
@@ -219,14 +293,14 @@ def process(name: str, default_branch: str) -> dict:
         if not changes:
             result.update({"ok": True, "skipped": True, "reason": "already clean"})
             return result
-        run(["git", "checkout", "-B", BRANCH], cwd=root)
-        run(["git", "add", "-A"], cwd=root)
-        if not run(["git", "status", "--porcelain"], cwd=root).stdout.strip():
+        run([GIT, "checkout", "-B", BRANCH], cwd=root)
+        run([GIT, "add", "-A"], cwd=root)
+        if not run([GIT, "status", "--porcelain"], cwd=root).stdout.strip():
             result.update({"ok": True, "skipped": True, "reason": "no staged changes"})
             return result
         run(
             [
-                "git",
+                GIT,
                 "-c",
                 "user.email=security-cleanup@local",
                 "-c",
@@ -239,18 +313,17 @@ def process(name: str, default_branch: str) -> dict:
             ],
             cwd=root,
         )
-        run(["git", "push", "-u", "origin", BRANCH, "--force"], cwd=root)
+        run([GIT, "push", "-u", "origin", BRANCH, "--force"], cwd=root)
         pr = create_pr(name, default_branch)
         result.update(pr)
         result["branch"] = BRANCH
         return result
-    except subprocess.CalledProcessError as e:
-        result.update(
-            {
-                "ok": False,
-                "error": ((e.stderr or e.stdout or str(e))[-1000:]),
-            }
-        )
+    except (subprocess.CalledProcessError, RuntimeError) as e:
+        if isinstance(e, subprocess.CalledProcessError):
+            msg = (e.stderr or e.stdout or str(e))[-1000:]
+        else:
+            msg = str(e)
+        result.update({"ok": False, "error": msg})
         return result
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -259,24 +332,34 @@ def process(name: str, default_branch: str) -> dict:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("repos", nargs="*", help="Optional repo names (default: all infected)")
-    parser.add_argument("--gitignore-only", action="store_true", help="Also/only process gitignore-IOC repos")
-    parser.add_argument("--include-gitignore-only", action="store_true", help="Include gitignore-only targets too")
+    parser.add_argument("--gitignore-only", action="store_true", help="Only process gitignore-IOC repos")
+    parser.add_argument(
+        "--include-gitignore-only",
+        action="store_true",
+        help="Include gitignore-only targets too",
+    )
     args = parser.parse_args()
+
+    ensure_tools()
+    print(f"Using git: {GIT}")
+    print(f"Using gh:  {GH}")
 
     data = json.loads(TARGETS_FILE.read_text(encoding="utf-8"))
     if args.repos:
         wanted = set(args.repos)
         targets = [
-            {"name": x["name"], "default_branch": x.get("default_branch") or x.get("defaultBranch") or "main"}
+            {
+                "name": x["name"],
+                "default_branch": x.get("default_branch") or x.get("defaultBranch") or "main",
+            }
             for x in (data["infected"] + data["gitignore_only"])
             if x["name"] in wanted
         ]
-        # allow unknown names with main/master probe via gh
         known = {t["name"] for t in targets}
         for name in args.repos:
             if name in known:
                 continue
-            meta = json.loads(run(["gh", "api", f"repos/{OWNER}/{name}"]).stdout)
+            meta = json.loads(run([GH, "api", f"repos/{OWNER}/{name}"]).stdout)
             targets.append({"name": name, "default_branch": meta.get("default_branch") or "main"})
     elif args.gitignore_only:
         targets = data["gitignore_only"]
@@ -285,16 +368,14 @@ def main():
         if args.include_gitignore_only:
             targets.extend(data["gitignore_only"])
 
-    # skip profile repo if already has open cleanup PR tip — still fine to rerun
     results = []
     for i, t in enumerate(targets, 1):
         name = t["name"]
         default_branch = t.get("default_branch") or "main"
         print(f"[{i}/{len(targets)}] {name} @ {default_branch}", flush=True)
-        # Skip Barosz30 if user only wants others — still process unless already same branch cleaned on default
         res = process(name, default_branch)
         results.append(res)
-        print(json.dumps(res, ensure_ascii=False)[:400], flush=True)
+        print(json.dumps(res, ensure_ascii=False)[:500], flush=True)
 
     out = HERE / "cleanup-results.json"
     out.write_text(json.dumps(results, indent=2), encoding="utf-8")
