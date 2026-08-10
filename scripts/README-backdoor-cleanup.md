@@ -1,34 +1,43 @@
 # VS Code folderOpen backdoor cleanup
 
-## Already opened
-- https://github.com/Barosz30/Barosz30/pull/1
+## Already merged
+- https://github.com/Barosz30/Barosz30/pull/1 (this profile repo is cleaned)
 
-## Why only one PR from the cloud agent?
-The Cursor agent token can push only to `Barosz30/Barosz30`. The other ~76 infected repos need **your** GitHub login.
+## Run on Windows (PowerShell)
 
-## Run locally (creates draft PRs for all infected repos)
+1. Install **GitHub CLI** (this was the cause of `WinError 2`):
+   ```powershell
+   winget install --id GitHub.cli
+   ```
+   Or download: https://cli.github.com/
 
-```bash
-gh auth login   # account Barosz30 with repo scope
-cd /path/to/Barosz30   # this profile repo, on the cleanup branch or after merge
-python3 scripts/remove-vscode-backdoor.py
-```
+2. **Close and reopen** PowerShell (so `gh` is on PATH).
 
-Options:
+3. Log in and verify:
+   ```powershell
+   gh auth login
+   gh auth status
+   ```
 
-```bash
-# selected repos
-python3 scripts/remove-vscode-backdoor.py Portfolio MechaShopFront Chatbot
+4. Run the cleaner from the repo root (or from `scripts\`):
+   ```powershell
+   cd "$env:USERPROFILE\Desktop\Projekty\Nowy folder\Barosz30"
+   python scripts\remove-vscode-backdoor.py
+   ```
 
-# also repos that only have dropper names in .gitignore (no payload file)
-python3 scripts/remove-vscode-backdoor.py --include-gitignore-only
-```
+   Or only a few repos first:
+   ```powershell
+   python scripts\remove-vscode-backdoor.py Portfolio MechaShopFront Chatbot
+   ```
 
 ## What it removes
 - `public/fonts/fa-solid-400.woff2` (JS malware)
 - `.vscode/tasks.json` (folderOpen executor)
 - planted `.vscode/settings.json` / `launch.json` / kit files
 - hardens `.gitignore` (`.vscode/`, `temp_auto_push.bat`, …)
+
+## If you see `WinError 2` / „Nie można odnaleźć określonego pliku”
+`gh` is not installed or not on PATH. Install GitHub CLI, open a **new** terminal, run `gh auth status`, then retry.
 
 ## Work / company repos
 Copy this script and scan company orgs the same way — the IOCs are identical.
