@@ -1,50 +1,59 @@
 # BOXEL
 
-Aplikacja desktopowa do **budowania i grania** w kwadratowe światy z klockami (styl OG) i programowaniem jak w Scratchu. Jest multiplayer, czat i znajomi.
+Natywna aplikacja **Go** do budowania i grania w kwadratowe światy z klockami (styl OG) i programowaniem jak w Scratchu. Multiplayer, czat i znajomi działają w tym samym binariu.
 
-## Uruchomienie (aplikacja, nie strona)
+TypeScript / Electron / Node zostały usunięte. Silnik, studio 3D, edytor klocków i serwer pokoi są w Go (goroutine na gracza).
 
-Potrzebujesz Node.js i **Go 1.22+**.
+## Uruchomienie
+
+Potrzebujesz **Go 1.22+** (przy pierwszym `go run` toolchain może pobrać nowszą wersję).
+
+Na Linuxie do okna gry:
+
+```bash
+sudo apt install gcc pkg-config libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxxf86vm-dev libasound2-dev
+```
 
 ```bash
 cd boxel
-npm install
-npm run app
+go test ./...
+go run ./cmd/boxel
 ```
 
-To odpala:
+To otwiera okno BOXEL i lokalny serwer `ws://127.0.0.1:8787`. Drugi gracz na tym samym PC: uruchom `go run ./cmd/boxel` jeszcze raz.
 
-1. serwer pokoi w **Go** (`ws://127.0.0.1:8787`) — goroutine na każdego gracza
-2. silnik UI
-3. **okno Electron** — BOXEL → Nowe okno (drugi gracz) otwiera drugie konto na tym samym PC
+Tylko serwer (np. na Render):
 
-Bez Electrona (tylko do testów silnika): `npm run server` i `npm run dev`.
+```bash
+go run ./cmd/server
+# HOST=0.0.0.0 PORT=8787
+```
 
-## Multiplayer, znajomi, czat
+## Sterowanie
 
-- Każdy ma **kod znajomego** `BX-XXXXXX`. Wpisz kod kolegi i kliknij Dodaj.
-- **Załóż pokój** — dostajesz kod 4-cyfrowy. Znajomy klika Zaproś albo wpisuje kod.
-- W pokoju widać innych graczy (kolorowe kostki), wspólne stawianie klocków i czat.
-- Czat pokoju + szept tylko do znajomych. Linki, Discord i wulgaryzmy są blokowane. Są gotowe bąbelki: Cześć!, Chodź tu!, Pomocy!…
+- **Buduj** — LPM stawia, PPM kasuje, przeciąganie obraca kamerę, kółko przybliża. 1–9 klocki, 0 gumka, Ctrl+Z cofnij.
+- **Klocki** — żółte zdarzenia i akcje jak w Scratchu.
+- **Graj** — WASD / strzałki, spacja, albo d-pad i SKOK na ekranie.
+- **Znajomi** — kod `BX-XXXXXX`, pokój 4-cyfrowy, czat w pokoju, szept tylko do znajomych. Linki i wulgaryzmy są blokowane.
 
-## Język i wątki
+Zapisy lądują w katalogu konfiguracyjnym systemu (`save.json`, `profile.json`). Serwer na innym hoście: `BOXEL_WS=ws://adres:8787 go run ./cmd/boxel`.
 
-TypeScript w Node jest jednowątkowy — to był zły wybór na **serwer gry**, nie na cały projekt.
+## Układ kodu
 
-| Warstwa | Język | Dlaczego |
-| --- | --- | --- |
-| Studio + klocki + voxel 24³ | TypeScript + Three.js | Edytor i UI nie są wąskim gardłem. Test `physics speed`: 2000 klatek fizyki w << 250 ms. Przepisywanie tego w Rust/Go teraz nie przyspieszy klikania klocków. |
-| Okno aplikacji | Electron | To jest **aplikacja**, nie karta przeglądarki. |
-| Pokoje / czat / sync pozycji i klocków | **Go** | Tu TS bolał: jedno pętla eventów na wszystkich graczy. W Go każdy socket ma swoją goroutine (odczyt + osobny write pump). Mutex tylko na stan pokoju. |
-
-**Dlaczego Go, a nie Rust (na teraz):** ten sam protokół JSON, szybciej dowieźć multiplayer, goroutines mapują się 1:1 na graczy. Rust (tokio albo później Bevy/godot-rust) ma sens, gdy świat urośnie i CPU silnika (meshing, fizyka, 50+ graczy) stanie się wąskim gardłem — wtedy przenosimy silnik, nie edytor klocków.
-
-HUD pokazuje **fps** na żywo. Jeśli spada poniżej ~40 przy tej wielkości mapy, wtedy ruszamy meshing (greedy mesh) albo natywny silnik — nie cały stack od zera.
+| Pakiet | Co robi |
+| --- | --- |
+| `cmd/boxel` | okno gry (Ebitengine) + lokalny hub |
+| `cmd/server` | sam serwer WebSocket |
+| `internal/engine` | świat, fizyka, interpreter klocków, szablony |
+| `internal/studio` | tryby Buduj / Graj / Klocki |
+| `internal/render` | voxel 3D (painter’s algorithm) |
+| `internal/hub` | pokoje, znajomi, czat |
+| `internal/app` | UI |
 
 ## Testy
 
 ```bash
-npm test
-npm run e2e   # wymaga działającego `npm run server`
-npm run build
+go test ./...
 ```
+
+Silnik i hub nie potrzebują okna. Aplikacja desktopowa to `go run ./cmd/boxel`.
