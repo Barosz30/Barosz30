@@ -1,0 +1,19 @@
+# Logs
+logs
+*.log
+
+# Go
+*.exe
+*.test
+/boxel
+/boxel-server
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# leftover tooling
+.vite/
+node_modules/
