@@ -4,6 +4,8 @@ Aplikacja desktopowa do **budowania i grania** w kwadratowe światy z klockami (
 
 ## Uruchomienie (aplikacja, nie strona)
 
+Potrzebujesz Node.js i **Go 1.22+**.
+
 ```bash
 cd boxel
 npm install
@@ -12,7 +14,7 @@ npm run app
 
 To odpala:
 
-1. serwer pokoi (`ws://127.0.0.1:8787`)
+1. serwer pokoi w **Go** (`ws://127.0.0.1:8787`) — goroutine na każdego gracza
 2. silnik UI
 3. **okno Electron** — BOXEL → Nowe okno (drugi gracz) otwiera drugie konto na tym samym PC
 
@@ -25,21 +27,24 @@ Bez Electrona (tylko do testów silnika): `npm run server` i `npm run dev`.
 - W pokoju widać innych graczy (kolorowe kostki), wspólne stawianie klocków i czat.
 - Czat pokoju + szept tylko do znajomych. Linki, Discord i wulgaryzmy są blokowane. Są gotowe bąbelki: Cześć!, Chodź tu!, Pomocy!…
 
-## Język i prędkość
+## Język i wątki
 
-Nie przerzucamy całego studia na Pythona ani C++.
+TypeScript w Node jest jednowątkowy — to był zły wybór na **serwer gry**, nie na cały projekt.
 
 | Warstwa | Język | Dlaczego |
 | --- | --- | --- |
-| Studio + klocki + voxel 24³ | TypeScript | To nie jest wąskie gardło. Test `physics speed`: 2000 klatek fizyki w << 250 ms. |
-| Okno aplikacji | Electron (Chromium) | To jest **aplikacja**, nie karta przeglądarki. Godot/C# ma sens przy większych światach i 50+ graczach — wtedy się przenosi silnik, nie teraz. |
-| Pokoje / czat / sync | Node WebSocket | 8 graczy w pokoju, 15 Hz pozycji, delty klocków. Rust wszedłby przy tysiącach połączeń. |
+| Studio + klocki + voxel 24³ | TypeScript + Three.js | Edytor i UI nie są wąskim gardłem. Test `physics speed`: 2000 klatek fizyki w << 250 ms. Przepisywanie tego w Rust/Go teraz nie przyspieszy klikania klocków. |
+| Okno aplikacji | Electron | To jest **aplikacja**, nie karta przeglądarki. |
+| Pokoje / czat / sync pozycji i klocków | **Go** | Tu TS bolał: jedno pętla eventów na wszystkich graczy. W Go każdy socket ma swoją goroutine (odczyt + osobny write pump). Mutex tylko na stan pokoju. |
 
-HUD pokazuje **fps** na żywo. Jeśli spada poniżej ~40 przy tej wielkości mapy, wtedy ruszamy meshing (greedy mesh) albo Godota — nie sam język skryptów.
+**Dlaczego Go, a nie Rust (na teraz):** ten sam protokół JSON, szybciej dowieźć multiplayer, goroutines mapują się 1:1 na graczy. Rust (tokio albo później Bevy/godot-rust) ma sens, gdy świat urośnie i CPU silnika (meshing, fizyka, 50+ graczy) stanie się wąskim gardłem — wtedy przenosimy silnik, nie edytor klocków.
+
+HUD pokazuje **fps** na żywo. Jeśli spada poniżej ~40 przy tej wielkości mapy, wtedy ruszamy meshing (greedy mesh) albo natywny silnik — nie cały stack od zera.
 
 ## Testy
 
 ```bash
 npm test
+npm run e2e   # wymaga działającego `npm run server`
 npm run build
 ```

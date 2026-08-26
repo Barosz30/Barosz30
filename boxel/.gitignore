@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Go play server
+*.exe
+*.test
+/boxel
+

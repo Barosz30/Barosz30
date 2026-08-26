@@ -6,12 +6,13 @@
   "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
-    "server": "tsx server/index.ts",
+    "server": "go run ./server",
     "app": "concurrently -k \"npm:server\" \"npm:dev\" \"wait-on http://127.0.0.1:5173 tcp:8787 && electron .\"",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
-    "test": "vitest run"
+    "test": "vitest run && go test ./server",
+    "e2e": "node scripts/e2e-multi.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -29,7 +30,6 @@
     "concurrently": "^9.2.1",
     "electron": "^39.2.7",
     "oxlint": "^1.79.0",
-    "tsx": "^4.21.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.11",
