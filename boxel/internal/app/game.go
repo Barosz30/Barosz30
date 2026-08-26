@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -24,7 +25,6 @@ const (
 	paletteW = 138
 	socialW  = 250
 	chatH    = 150
-	codeH    = 250
 )
 
 type fieldID int
@@ -52,6 +52,7 @@ type Game struct {
 	friends   []hub.FriendInfo
 	rooms     []hub.RoomInfo
 	roomCode  string
+	roomHost  bool
 	chat      []hub.ChatLine
 	whisperTo string
 	whisperNm string
@@ -66,6 +67,7 @@ type Game struct {
 	chatEd   string
 	tmpl     int
 	codeSel  int
+	selPath  []int
 
 	mouse        click
 	prevMX       int
@@ -110,7 +112,10 @@ func New() *Game {
 		g.net.Send(map[string]any{"type": "place", "x": x, "y": y, "z": z, "id": id})
 	}
 	rt.OnPos = func(x, y, z, yaw float64) {
-		g.net.Send(map[string]any{"type": "pos", "x": x, "y": y, "z": z, "yaw": yaw})
+		g.net.Send(map[string]any{"type": "pos", "x": x, "y": y, "z": z, "yaw": yaw, "score": g.rt.Player.Score})
+	}
+	rt.OnScriptEvent = func(kind string, x, y, z, block int) {
+		g.net.Send(map[string]any{"type": "scriptEvent", "kind": kind, "x": x, "y": y, "z": z, "block": block})
 	}
 	g.net.Connect()
 	return g
@@ -264,6 +269,9 @@ func (g *Game) typeIntoFocus() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyBackspace) && len(*dst) > 0 {
 		r := []rune(*dst)
 		*dst = string(r[:len(r)-1])
+		if g.focus == fieldCodeText {
+			g.afterEdit()
+		}
 	}
 	chars := ebiten.AppendInputChars(nil)
 	for _, ch := range chars {
@@ -277,6 +285,12 @@ func (g *Game) typeIntoFocus() {
 		if (g.focus == fieldName || g.focus == fieldRename) && len([]rune(*dst)) > 16 {
 			*dst = string([]rune(*dst)[:16])
 		}
+		if g.focus == fieldCodeText && len([]rune(*dst)) > 48 {
+			*dst = string([]rune(*dst)[:48])
+		}
+	}
+	if g.focus == fieldCodeText && len(chars) > 0 {
+		g.afterEdit()
 	}
 }
 
@@ -292,6 +306,10 @@ func (g *Game) fieldPtr() *string {
 		return &g.joinEd
 	case fieldChat:
 		return &g.chatEd
+	case fieldCodeText:
+		if n := g.selectedNode(); n != nil && n.Kind == engine.SetMessage {
+			return &n.Text
+		}
 	}
 	return nil
 }
@@ -325,16 +343,29 @@ func (g *Game) commitField() {
 			g.net.Send(msg)
 			g.chatEd = ""
 		}
+	case fieldCodeText:
+		g.afterEdit()
 	}
 	g.focus = fieldNone
 }
 
+func (g *Game) bottomH() int {
+	if g.rt.Mode != engine.ModeCode {
+		return chatH
+	}
+	h := g.h * 2 / 5
+	if h < 260 {
+		h = 260
+	}
+	if h > 440 {
+		h = 440
+	}
+	return h
+}
+
 func (g *Game) viewport() (x, y, w, h int) {
 	x, y = 0, toolbarH
-	w, h = g.w, g.h-toolbarH-chatH
-	if g.rt.Mode == engine.ModeCode {
-		h = g.h - toolbarH - codeH
-	}
+	w, h = g.w, g.h-toolbarH-g.bottomH()
 	if g.rt.Mode == engine.ModeBuild {
 		x += paletteW
 		w -= paletteW
@@ -379,9 +410,42 @@ func (g *Game) onNet(msg map[string]any) {
 	case "rooms":
 		g.rooms = parseRooms(msg["rooms"])
 	case "room":
-		g.roomCode = str(msg["code"])
+		code := str(msg["code"])
+		first := g.roomCode != code
+		g.roomCode = code
+		g.roomHost = asBool(msg["host"])
+		if g.rt.Mode == engine.ModePlay {
+			g.rt.Stop(engine.ModeBuild)
+		}
 		g.rt.ApplyWorldData(asInt(msg["sizeX"]), asInt(msg["sizeY"]), asInt(msg["sizeZ"]), asIntSlice(msg["blocks"]))
-		g.flash("Pokój " + g.roomCode)
+		g.rt.SetScripts(parseScripts(msg["scripts"]))
+		if first {
+			g.flash("Pokój " + g.roomCode)
+		}
+	case "scripts":
+		if str(msg["fromId"]) != g.profile.ID {
+			g.rt.SetScripts(parseScripts(msg["scripts"]))
+		}
+		if _, ok := msg["host"]; ok {
+			g.roomHost = asBool(msg["host"])
+		}
+	case "scriptFx":
+		if str(msg["fromId"]) == g.profile.ID {
+			break
+		}
+		name := str(msg["fromName"])
+		if m := str(msg["message"]); m != "" {
+			g.flash(name + ": " + m)
+		} else if asBool(msg["win"]) {
+			g.flash(name + " wygrał!")
+		} else if asBool(msg["lose"]) {
+			g.flash(name + " odpadł")
+		}
+	case "hostChanged":
+		g.roomHost = asBool(msg["host"])
+		if g.roomHost {
+			g.flash("Jesteś gospodarzem klocków kodu")
+		}
 	case "players":
 		g.rt.Remotes = parseRemotes(msg["players"])
 	case "place":
@@ -400,6 +464,7 @@ func (g *Game) onNet(msg map[string]any) {
 		g.flash(str(msg["fromName"]) + " zaprasza do pokoju " + str(msg["roomCode"]))
 	case "leftRoom":
 		g.roomCode = ""
+		g.roomHost = false
 		g.rt.Remotes = nil
 	case "error":
 		g.flash(str(msg["text"]))
@@ -473,9 +538,25 @@ func parseRemotes(v any) []engine.RemoteAvatar {
 		out = append(out, engine.RemoteAvatar{
 			ID: str(m["id"]), Name: str(m["name"]), Color: str(m["color"]),
 			X: num(m["x"]), Y: num(m["y"]), Z: num(m["z"]), Yaw: num(m["yaw"]),
+			Score: asInt(m["score"]),
 		})
 	}
 	return out
+}
+
+func parseScripts(v any) []engine.ScriptStack {
+	if v == nil {
+		return nil
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	var out []engine.ScriptStack
+	if json.Unmarshal(b, &out) != nil {
+		return nil
+	}
+	return engine.SanitizeScripts(out)
 }
 
 func num(v any) float64 {

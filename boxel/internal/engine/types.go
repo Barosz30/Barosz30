@@ -124,4 +124,5 @@ type GameAPI interface {
 type RemoteAvatar struct {
 	ID, Name, Color string
 	X, Y, Z, Yaw    float64
+	Score           int
 }

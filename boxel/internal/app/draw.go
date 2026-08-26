@@ -118,6 +118,7 @@ func (g *Game) drawToolbar(dst *ebiten.Image) {
 		g.rt.SetScripts(s)
 		g.rt.Name = n
 		g.nameEdit = n
+		g.pushWorld()
 		g.flash("Wczytano szablon")
 	}
 
@@ -140,6 +141,7 @@ func (g *Game) drawToolbar(dst *ebiten.Image) {
 				g.rt.LoadWorld(w)
 				g.rt.SetScripts(s)
 				g.rt.Name, g.nameEdit = n, n
+				g.pushWorld()
 				g.flash("Wczytano zapis")
 			} else {
 				g.flash("Brak zapisu")
@@ -210,6 +212,11 @@ func (g *Game) drawHUD(dst *ebiten.Image, vx, vy, vw, vh int) {
 	drawText(dst, fmt.Sprintf("PKT %d", hud.Score), vx+12, vy+10, face14, colInk)
 	drawText(dst, fmt.Sprintf("MONETY %d", hud.Coins), vx+110, vy+10, face14, colAccent)
 	drawText(dst, fmt.Sprintf("ŻYCIA %d", hud.Lives), vx+240, vy+10, face14, colDanger)
+	rx := vx + 360
+	for _, rem := range g.rt.Remotes {
+		drawText(dst, fmt.Sprintf("%s %d", rem.Name, rem.Score), rx, vy+10, face10, colMuted)
+		rx += 90
+	}
 	if hud.Message != "" {
 		tw, _ := text.Measure(hud.Message, face14, 0)
 		drawText(dst, hud.Message, vx+(vw-int(tw))/2, vy+40, face14, colAccent)
@@ -266,11 +273,7 @@ func (g *Game) drawSocial(dst *ebiten.Image) {
 	x := g.w - socialW
 	y0 := toolbarH
 	h := g.h - toolbarH
-	if g.rt.Mode == engine.ModeCode {
-		h -= codeH
-	} else {
-		h -= chatH
-	}
+	h -= g.bottomH()
 	fillRect(dst, Rect{x, y0, socialW, h}, color.RGBA{0x24, 0x18, 0x3a, 0xff})
 	drawText(dst, "Znajomi", x+12, y0+8, face14, colAccent)
 	net := "Łączenie…"
@@ -328,7 +331,8 @@ func (g *Game) drawSocial(dst *ebiten.Image) {
 			g.net.Send(map[string]any{
 				"type": "host", "name": g.rt.Name,
 				"sizeX": g.rt.World.SizeX, "sizeY": g.rt.World.SizeY, "sizeZ": g.rt.World.SizeZ,
-				"blocks": bytesToInt(g.rt.World.Blocks),
+				"blocks":  bytesToInt(g.rt.World.Blocks),
+				"scripts": g.rt.Scripts,
 			})
 		}
 		y += 36
@@ -401,147 +405,5 @@ func (g *Game) drawChat(dst *ebiten.Image) {
 		if button(dst, Rect{g.w - 90, g.h - 36, 82, 26}, "Anuluj", false, colDanger, g.mouse) {
 			g.whisperTo, g.whisperNm = "", ""
 		}
-	}
-}
-
-func (g *Game) drawCode(dst *ebiten.Image) {
-	y := g.h - codeH
-	fillRect(dst, Rect{0, y, g.w, codeH}, color.RGBA{0x1e, 0x14, 0x32, 0xff})
-	drawText(dst, "Klocki kodu — kliknij żółte zdarzenie, potem akcję", 12, y+8, face12, colMuted)
-	toolbox := []struct {
-		kind  engine.CodeKind
-		label string
-		hat   bool
-	}{
-		{engine.HatStart, "gdy gra się zaczyna", true},
-		{engine.HatCoin, "gdy zbierze monetę", true},
-		{engine.HatTouch, "gdy dotknie klocka", true},
-		{engine.HatGoal, "gdy dotrze do mety", true},
-		{engine.HatDeath, "gdy straci życie", true},
-		{engine.HatAlways, "zawsze", true},
-		{engine.AddScore, "dodaj punkty", false},
-		{engine.SetMessage, "ustaw wiadomość", false},
-		{engine.Sound, "zagraj dźwięk", false},
-		{engine.Teleport, "teleportuj na start", false},
-		{engine.Win, "wygraj", false},
-		{engine.Lose, "przegrana", false},
-		{engine.Wait, "poczekaj", false},
-		{engine.IfScore, "jeśli punkty ≥", false},
-		{engine.Repeat, "powtórz razy", false},
-	}
-	x := 8
-	yy := y + 32
-	for _, item := range toolbox {
-		fill := color.RGBA{0xe8, 0xb0, 0x3a, 0xff}
-		if !item.hat {
-			fill = color.RGBA{0xd0, 0x7a, 0x3f, 0xff}
-		}
-		r := Rect{x, yy, 150, 22}
-		it := item
-		if button(dst, r, it.label, false, fill, g.mouse) {
-			g.addCode(it.kind, it.hat)
-		}
-		x += 156
-		if x > g.w-160 {
-			x = 8
-			yy += 26
-		}
-	}
-	yy += 32
-	for i, st := range g.rt.Scripts {
-		line := ""
-		for _, n := range st.Blocks {
-			if line != "" {
-				line += " → "
-			}
-			line += string(n.Kind)
-		}
-		if len(line) > 80 {
-			line = line[:80] + "…"
-		}
-		col := colPanel
-		if i == g.codeSel {
-			col = color.RGBA{0x4a, 0x3a, 0x68, 0xff}
-		}
-		r := Rect{8, yy, g.w - 80, 22}
-		if button(dst, r, line, i == g.codeSel, col, g.mouse) {
-			g.codeSel = i
-		}
-		idx := i
-		if button(dst, Rect{g.w - 68, yy, 56, 22}, "Usuń", false, colDanger, g.mouse) {
-			g.rt.Scripts = append(g.rt.Scripts[:idx], g.rt.Scripts[idx+1:]...)
-			g.rt.SetScripts(g.rt.Scripts)
-			if g.codeSel >= len(g.rt.Scripts) {
-				g.codeSel = len(g.rt.Scripts) - 1
-			}
-		}
-		yy += 24
-		if yy > g.h-8 {
-			break
-		}
-	}
-}
-
-func (g *Game) addCode(kind engine.CodeKind, hat bool) {
-	n := engine.MakeNode(kind, nil)
-	switch kind {
-	case engine.HatTouch:
-		n.Block = 8
-	case engine.AddScore:
-		n.Amount = 10
-	case engine.SetMessage:
-		n.Text = "Cześć!"
-	case engine.Sound:
-		n.Sound = engine.SndCoin
-	case engine.Wait:
-		n.Seconds = 1
-	case engine.IfScore:
-		n.Gte = 30
-	case engine.Repeat:
-		n.Times = 3
-	}
-	if hat {
-		g.rt.Scripts = append(g.rt.Scripts, engine.ScriptStack{ID: engine.NewID(), Blocks: []engine.CodeNode{n}})
-		g.codeSel = len(g.rt.Scripts) - 1
-		g.rt.SetScripts(g.rt.Scripts)
-		return
-	}
-	if len(g.rt.Scripts) == 0 {
-		return
-	}
-	if g.codeSel < 0 || g.codeSel >= len(g.rt.Scripts) {
-		g.codeSel = len(g.rt.Scripts) - 1
-	}
-	st := &g.rt.Scripts[g.codeSel]
-	if len(st.Blocks) > 0 {
-		last := &st.Blocks[len(st.Blocks)-1]
-		if last.Kind == engine.IfScore || last.Kind == engine.Repeat {
-			last.Body = append(last.Body, n)
-			g.rt.SetScripts(g.rt.Scripts)
-			return
-		}
-	}
-	st.Blocks = append(st.Blocks, n)
-	g.rt.SetScripts(g.rt.Scripts)
-}
-
-func (g *Game) drawHelp(dst *ebiten.Image) {
-	r := Rect{g.w/2 - 220, g.h/2 - 140, 440, 280}
-	panel(dst, r, colPanel)
-	drawText(dst, "Jak grać w BOXEL", r.X+20, r.Y+16, face18, colAccent)
-	lines := []string{
-		"1. Buduj — klocki stawiasz myszą (LPM / PPM).",
-		"2. Znajomi — daj kolegom kod BX-…. Razem załóżcie pokój.",
-		"3. Czat działa w pokoju. Szept tylko do znajomych.",
-		"4. Graj — WASD, spacja. Drugie okno: uruchom BOXEL jeszcze raz.",
-		"To jest aplikacja Go, nie strona w przeglądarce.",
-	}
-	yy := r.Y + 56
-	for _, ln := range lines {
-		drawText(dst, ln, r.X+20, yy, face12, colInk)
-		yy += 28
-	}
-	if button(dst, Rect{r.X + 140, r.Y + 230, 160, 34}, "OK, buduję!", false, colPlay, g.mouse) {
-		g.help = false
 	}
 }

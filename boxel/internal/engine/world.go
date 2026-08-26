@@ -146,7 +146,7 @@ func DeserializeGame(data SavedGame) (World, []ScriptStack, string) {
 	if name == "" {
 		name = "Moja gra"
 	}
-	return w, CloneScripts(data.Scripts), name
+	return w, SanitizeScripts(CloneScripts(data.Scripts)), name
 }
 
 func CloneScripts(scripts []ScriptStack) []ScriptStack {

@@ -50,10 +50,25 @@ func TestWSFriendsRoomChatPlace(t *testing.T) {
 	you := hb["you"].(map[string]any)
 	_ = a.WriteJSON(map[string]any{"type": "addFriend", "code": you["friendCode"]})
 	wait(a, "friends")
-	_ = a.WriteJSON(map[string]any{"type": "host", "name": "Test", "sizeX": 2, "sizeY": 2, "sizeZ": 2, "blocks": []int{0, 0, 0, 0, 0, 0, 0, 0}})
+	_ = a.WriteJSON(map[string]any{
+		"type": "host", "name": "Test", "sizeX": 2, "sizeY": 2, "sizeZ": 2,
+		"blocks": []int{0, 0, 0, 0, 0, 0, 0, 0},
+		"scripts": []map[string]any{
+			{"id": "s", "blocks": []map[string]any{
+				{"kind": "hatStart"},
+				{"kind": "setMessage", "text": "Cześć!"},
+			}},
+		},
+	})
 	room := wait(a, "room")
+	if room["scripts"] == nil {
+		t.Fatal("host room missing scripts")
+	}
 	_ = b.WriteJSON(map[string]any{"type": "join", "code": room["code"]})
-	wait(b, "room")
+	joined := wait(b, "room")
+	if joined["scripts"] == nil {
+		t.Fatal("join room missing scripts")
+	}
 	_ = a.WriteJSON(map[string]any{"type": "chat", "text": "Cześć!"})
 	chat := wait(b, "chat")
 	line := chat["line"].(map[string]any)

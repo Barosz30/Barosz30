@@ -10,25 +10,31 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+
+	"boxel/internal/engine"
 )
 
 type inbound struct {
-	Type       string          `json:"type"`
-	ID         json.RawMessage `json:"id"`
-	Name       string          `json:"name"`
-	FriendCode string          `json:"friendCode"`
-	Code       string          `json:"code"`
-	SizeX      int             `json:"sizeX"`
-	SizeY      int             `json:"sizeY"`
-	SizeZ      int             `json:"sizeZ"`
-	Blocks     []int           `json:"blocks"`
-	X          float64         `json:"x"`
-	Y          float64         `json:"y"`
-	Z          float64         `json:"z"`
-	Yaw        float64         `json:"yaw"`
-	Text       string          `json:"text"`
-	ToID       string          `json:"toId"`
-	FriendID   string          `json:"friendId"`
+	Type       string               `json:"type"`
+	ID         json.RawMessage      `json:"id"`
+	Name       string               `json:"name"`
+	FriendCode string               `json:"friendCode"`
+	Code       string               `json:"code"`
+	SizeX      int                  `json:"sizeX"`
+	SizeY      int                  `json:"sizeY"`
+	SizeZ      int                  `json:"sizeZ"`
+	Blocks     []int                `json:"blocks"`
+	X          float64              `json:"x"`
+	Y          float64              `json:"y"`
+	Z          float64              `json:"z"`
+	Yaw        float64              `json:"yaw"`
+	Text       string               `json:"text"`
+	ToID       string               `json:"toId"`
+	FriendID   string               `json:"friendId"`
+	Scripts    []engine.ScriptStack `json:"scripts"`
+	Score      float64              `json:"score"`
+	Kind       string               `json:"kind"`
+	Block      int                  `json:"block"`
 }
 
 func parseInbound(raw []byte) (inbound, int, string) {
@@ -68,6 +74,7 @@ type RemotePlayer struct {
 	Y     float64 `json:"y"`
 	Z     float64 `json:"z"`
 	Yaw   float64 `json:"yaw"`
+	Score int     `json:"score"`
 }
 
 type ChatLine struct {
@@ -93,6 +100,7 @@ type Player struct {
 	color      string
 	x, y, z    float64
 	yaw        float64
+	score      int
 	roomID     string
 	lastChat   time.Time
 	lastPos    time.Time
@@ -101,14 +109,15 @@ type Player struct {
 }
 
 type Room struct {
-	id     string
-	code   string
-	name   string
-	hostID string
-	sizeX  int
-	sizeY  int
-	sizeZ  int
-	blocks []int
+	id      string
+	code    string
+	name    string
+	hostID  string
+	sizeX   int
+	sizeY   int
+	sizeZ   int
+	blocks  []int
+	scripts []engine.ScriptStack
 }
 
 type Hub struct {
@@ -244,6 +253,12 @@ func (h *Hub) Handle(p *Player, msg inbound, blockID int, stringID string) {
 		h.pos(p, msg)
 	case "place":
 		h.place(p, msg, blockID)
+	case "scripts":
+		h.setScripts(p, msg.Scripts)
+	case "world":
+		h.setWorld(p, msg)
+	case "scriptEvent":
+		h.scriptEvent(p, msg)
 	case "chat":
 		h.chat(p, msg.Text, msg.ToID)
 	case "invite":
@@ -287,27 +302,19 @@ func (h *Hub) host(p *Player, msg inbound) {
 		copy(blocks, msg.Blocks)
 	}
 	room := &Room{
-		id:     makeID(),
-		code:   h.uniqueRoomCode(),
-		name:   sanitizeName(firstNonEmpty(msg.Name, "Pokój")),
-		hostID: p.id,
-		sizeX:  sizeX,
-		sizeY:  sizeY,
-		sizeZ:  sizeZ,
-		blocks: blocks,
+		id:      makeID(),
+		code:    h.uniqueRoomCode(),
+		name:    sanitizeName(firstNonEmpty(msg.Name, "Pokój")),
+		hostID:  p.id,
+		sizeX:   sizeX,
+		sizeY:   sizeY,
+		sizeZ:   sizeZ,
+		blocks:  blocks,
+		scripts: engine.SanitizeScripts(msg.Scripts),
 	}
 	h.rooms[room.id] = room
 	p.roomID = room.id
-	h.emit(p, map[string]any{
-		"type":   "room",
-		"code":   room.code,
-		"name":   room.name,
-		"host":   true,
-		"sizeX":  room.sizeX,
-		"sizeY":  room.sizeY,
-		"sizeZ":  room.sizeZ,
-		"blocks": room.blocks,
-	})
+	h.emitRoom(room, p, true)
 	h.broadcastRooms()
 	h.broadcastPlayers(room.id)
 	h.broadcastFriendsOfLocked(p.id)
@@ -334,16 +341,7 @@ func (h *Hub) join(p *Player, code string) {
 		h.leaveRoomLocked(p)
 	}
 	p.roomID = room.id
-	h.emit(p, map[string]any{
-		"type":   "room",
-		"code":   room.code,
-		"name":   room.name,
-		"host":   room.hostID == p.id,
-		"sizeX":  room.sizeX,
-		"sizeY":  room.sizeY,
-		"sizeZ":  room.sizeZ,
-		"blocks": room.blocks,
-	})
+	h.emitRoom(room, p, room.hostID == p.id)
 	h.broadcastPlayers(room.id)
 	h.broadcastFriendsOfLocked(p.id)
 }
@@ -361,6 +359,13 @@ func (h *Hub) leaveRoomLocked(p *Player) {
 		delete(h.rooms, roomID)
 	} else if room != nil && room.hostID == p.id && len(left) > 0 {
 		room.hostID = left[0].id
+		for _, other := range left {
+			h.emit(other, map[string]any{
+				"type":     "hostChanged",
+				"host":     other.id == room.hostID,
+				"hostName": left[0].name,
+			})
+		}
 	}
 	if h.rooms[roomID] != nil {
 		h.broadcastPlayers(roomID)
@@ -376,6 +381,7 @@ func (h *Hub) pos(p *Player, msg inbound) {
 	}
 	p.lastPos = now
 	p.x, p.y, p.z, p.yaw = msg.X, msg.Y, msg.Z, msg.Yaw
+	p.score = int(msg.Score)
 	if p.roomID != "" {
 		h.broadcastPlayers(p.roomID)
 	}
@@ -471,6 +477,128 @@ func (h *Hub) invite(p *Player, friendID string) {
 	h.emit(other, map[string]any{"type": "invite", "fromName": p.name, "roomCode": room.code})
 }
 
+func (h *Hub) emitRoom(room *Room, p *Player, host bool) {
+	h.emit(p, map[string]any{
+		"type":    "room",
+		"code":    room.code,
+		"name":    room.name,
+		"host":    host,
+		"sizeX":   room.sizeX,
+		"sizeY":   room.sizeY,
+		"sizeZ":   room.sizeZ,
+		"blocks":  room.blocks,
+		"scripts": room.scripts,
+	})
+}
+
+func (h *Hub) setScripts(p *Player, scripts []engine.ScriptStack) {
+	if p.roomID == "" {
+		h.emit(p, map[string]any{"type": "error", "text": "Najpierw załóż pokój, żeby wysłać klocki kodu."})
+		return
+	}
+	room := h.rooms[p.roomID]
+	if room == nil || room.hostID != p.id {
+		h.emit(p, map[string]any{"type": "error", "text": "Tylko gospodarz zmienia klocki kodu w pokoju."})
+		return
+	}
+	room.scripts = engine.SanitizeScripts(scripts)
+	for _, other := range h.roomPlayers(room.id) {
+		h.emit(other, map[string]any{"type": "scripts", "scripts": room.scripts, "fromId": p.id, "host": other.id == room.hostID})
+	}
+}
+
+func (h *Hub) setWorld(p *Player, msg inbound) {
+	if p.roomID == "" {
+		return
+	}
+	room := h.rooms[p.roomID]
+	if room == nil || room.hostID != p.id {
+		h.emit(p, map[string]any{"type": "error", "text": "Tylko gospodarz wczytuje świat do pokoju."})
+		return
+	}
+	sizeX := clampDim(msg.SizeX, 24)
+	sizeY := clampDim(msg.SizeY, 16)
+	sizeZ := clampDim(msg.SizeZ, 24)
+	need := sizeX * sizeY * sizeZ
+	blocks := append([]int(nil), msg.Blocks...)
+	if len(blocks) != need {
+		blocks = make([]int, need)
+		copy(blocks, msg.Blocks)
+	}
+	room.sizeX, room.sizeY, room.sizeZ = sizeX, sizeY, sizeZ
+	room.blocks = blocks
+	if len(msg.Scripts) > 0 {
+		room.scripts = engine.SanitizeScripts(msg.Scripts)
+	}
+	for _, other := range h.roomPlayers(room.id) {
+		h.emitRoom(room, other, other.id == room.hostID)
+	}
+}
+
+type serverAPI struct {
+	score     int
+	message   string
+	won       bool
+	lost      bool
+	teleports int
+	sounds    []engine.SoundName
+}
+
+func (a *serverAPI) AddScore(n int)                  { a.score += n }
+func (a *serverAPI) GetScore() int                   { return a.score }
+func (a *serverAPI) SetMessage(text string)          { a.message = text }
+func (a *serverAPI) DoWin()                          { a.won = true }
+func (a *serverAPI) DoLose()                         { a.lost = true }
+func (a *serverAPI) TeleportSpawn()                  { a.teleports++ }
+func (a *serverAPI) PlaySound(name engine.SoundName) { a.sounds = append(a.sounds, name) }
+func (a *serverAPI) IsStopped() bool                 { return a.won || a.lost }
+
+func (h *Hub) scriptEvent(p *Player, msg inbound) {
+	if p.roomID == "" {
+		return
+	}
+	room := h.rooms[p.roomID]
+	if room == nil {
+		return
+	}
+	kind := msg.Kind
+	if kind == "" {
+		return
+	}
+	if kind == "coin" {
+		h.place(p, inbound{X: msg.X, Y: msg.Y, Z: msg.Z}, 0)
+	}
+	api := &serverAPI{score: p.score}
+	engine.RunScripts(room.scripts, engine.ScriptEvent{Kind: kind, Block: msg.Block}, api)
+	p.score = api.score
+	out := map[string]any{
+		"type":     "scriptFx",
+		"fromId":   p.id,
+		"fromName": p.name,
+		"kind":     kind,
+		"score":    api.score,
+		"message":  api.message,
+		"win":      api.won,
+		"lose":     api.lost,
+		"teleport": api.teleports > 0,
+	}
+	if len(api.sounds) > 0 {
+		out["sound"] = string(api.sounds[len(api.sounds)-1])
+	}
+	for _, other := range h.roomPlayers(room.id) {
+		if other.id == p.id {
+			continue
+		}
+		h.emit(other, out)
+	}
+}
+
+func EvalScripts(scripts []engine.ScriptStack, event engine.ScriptEvent) *serverAPI {
+	api := &serverAPI{}
+	engine.RunScripts(engine.SanitizeScripts(scripts), event, api)
+	return api
+}
+
 func (h *Hub) roomPlayers(roomID string) []*Player {
 	out := []*Player{}
 	for _, p := range h.players {
@@ -485,7 +613,7 @@ func (h *Hub) broadcastPlayers(roomID string) {
 	members := h.roomPlayers(roomID)
 	full := make([]RemotePlayer, 0, len(members))
 	for _, p := range members {
-		full = append(full, RemotePlayer{ID: p.id, Name: p.name, Color: p.color, X: p.x, Y: p.y, Z: p.z, Yaw: p.yaw})
+		full = append(full, RemotePlayer{ID: p.id, Name: p.name, Color: p.color, X: p.x, Y: p.y, Z: p.z, Yaw: p.yaw, Score: p.score})
 	}
 	for _, p := range members {
 		list := make([]RemotePlayer, 0, len(full))

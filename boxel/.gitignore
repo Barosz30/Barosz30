@@ -13,3 +13,7 @@ logs
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# leftover tooling
+.vite/
+node_modules/

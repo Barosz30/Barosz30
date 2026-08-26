@@ -38,6 +38,14 @@ go run ./cmd/server
 
 Zapisy lądują w katalogu konfiguracyjnym systemu (`save.json`, `profile.json`). Serwer na innym hoście: `BOXEL_WS=ws://adres:8787 go run ./cmd/boxel`.
 
+## Klocki kodu — lokalnie i na serwerze
+
+- **Lokalnie (solo / ten komputer):** klocki są w pamięci studia i w `save.json`. GRAJ odpala interpreter na Twoim PC.
+- **W pokoju:** gospodarz wysyła klocki razem ze światem. Dołączający dostają tę samą listę skryptów. Zmiana klocków w edytorze (gospodarz) idzie do wszystkich. Zbieranie monety kasuje klocek w świecie pokoju i pokazuje efekt (wiadomość) innym graczom.
+- **Dedykowany serwer** (`cmd/server`) trzyma te same skrypty co lokalny hub w oknie BOXEL.
+
+Tylko gospodarz edytuje klocki w pokoju. Gdy wyjdzie, następna osoba w pokoju przejmuje rolę gospodarza.
+
 ## Układ kodu
 
 | Pakiet | Co robi |

@@ -32,9 +32,10 @@ type Runtime struct {
 	Sounds     []engine.SoundName
 	CoinSpin   float64
 
-	OnEdit  func(x, y, z, id int)
-	OnPos   func(x, y, z, yaw float64)
-	lastPos time.Time
+	OnEdit        func(x, y, z, id int)
+	OnPos         func(x, y, z, yaw float64)
+	OnScriptEvent func(kind string, x, y, z, block int)
+	lastPos       time.Time
 }
 
 func New(world engine.World, scripts []engine.ScriptStack, name string) *Runtime {
@@ -48,14 +49,14 @@ func New(world engine.World, scripts []engine.ScriptStack, name string) *Runtime
 		VM:      &engine.ScriptVM{},
 		Overlap: map[string]struct{}{},
 	}
-	rt.VM.SetScripts(scripts)
+	rt.SetScripts(scripts)
 	rt.SyncSpawn()
 	return rt
 }
 
 func (rt *Runtime) SetScripts(s []engine.ScriptStack) {
-	rt.Scripts = s
-	rt.VM.SetScripts(s)
+	rt.Scripts = engine.SanitizeScripts(s)
+	rt.VM.SetScripts(rt.Scripts)
 }
 
 func (rt *Runtime) sound(name engine.SoundName) {
@@ -144,7 +145,9 @@ func (rt *Runtime) Play() {
 	engine.TeleportToSpawn(rt.Player)
 	rt.Player.Message = ""
 	rt.MsgUntil = time.Time{}
+	rt.VM.SetScripts(rt.Scripts)
 	rt.VM.Emit(engine.ScriptEvent{Kind: "start"}, rt.api())
+	rt.VM.Tick(0.016, rt.api())
 	rt.sound(engine.SndPop)
 }
 
@@ -261,12 +264,17 @@ func (rt *Runtime) handleEvents(events []engine.PhysEvent) {
 			}
 			engine.SetBlock(rt.World, x, y, z, int(engine.Air))
 			rt.Player.Coins++
+			if rt.OnEdit != nil {
+				rt.OnEdit(x, y, z, int(engine.Air))
+			}
+			rt.emitNetScript("coin", x, y, z, 0)
 			rt.VM.Emit(engine.ScriptEvent{Kind: "coin"}, api)
 		case "hurt":
 			rt.Player.HitCooldown = 1
 			rt.Player.Lives--
 			rt.sound(engine.SndBump)
 			rt.VM.Emit(engine.ScriptEvent{Kind: "touch", Block: ev.Block}, api)
+			rt.emitNetScript("death", int(ev.X), int(ev.Y), int(ev.Z), ev.Block)
 			rt.VM.Emit(engine.ScriptEvent{Kind: "death"}, api)
 			if rt.Player.Lives <= 0 {
 				api.DoLose()
@@ -276,6 +284,7 @@ func (rt *Runtime) handleEvents(events []engine.PhysEvent) {
 		case "fall":
 			rt.Player.Lives--
 			rt.sound(engine.SndBump)
+			rt.emitNetScript("death", int(rt.Player.X), int(rt.Player.Y), int(rt.Player.Z), 0)
 			rt.VM.Emit(engine.ScriptEvent{Kind: "death"}, api)
 			if rt.Player.Lives <= 0 {
 				api.DoLose()
@@ -283,6 +292,7 @@ func (rt *Runtime) handleEvents(events []engine.PhysEvent) {
 				engine.TeleportToSpawn(rt.Player)
 			}
 		case "goal":
+			rt.emitNetScript("goal", int(ev.X), int(ev.Y), int(ev.Z), 0)
 			rt.VM.Emit(engine.ScriptEvent{Kind: "goal"}, api)
 		case "checkpoint":
 			rt.Player.SpawnX, rt.Player.SpawnY, rt.Player.SpawnZ = ev.X, ev.Y, ev.Z
@@ -309,6 +319,12 @@ func (rt *Runtime) emitTouches() {
 		}
 	}
 	rt.Overlap = next
+}
+
+func (rt *Runtime) emitNetScript(kind string, x, y, z, block int) {
+	if rt.OnScriptEvent != nil {
+		rt.OnScriptEvent(kind, x, y, z, block)
+	}
 }
 
 func (rt *Runtime) HUD() engine.HudState {

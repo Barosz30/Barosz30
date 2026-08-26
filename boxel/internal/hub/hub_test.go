@@ -3,6 +3,8 @@ package hub
 import (
 	"encoding/json"
 	"testing"
+
+	"boxel/internal/engine"
 )
 
 func drain(p *Player) []map[string]any {
@@ -156,4 +158,93 @@ func TestReconnectKeepsFriends(t *testing.T) {
 	if len(list) != 1 {
 		t.Fatalf("friends %v", friends)
 	}
+}
+
+func TestRoomScriptsLocalAndServer(t *testing.T) {
+	h := NewHub()
+	a := h.Connect(inbound{Type: "hello", Name: "Ania"}, "", nil)
+	b := h.Connect(inbound{Type: "hello", Name: "Kuba"}, "", nil)
+	drain(a)
+	drain(b)
+
+	scripts := []engine.ScriptStack{{
+		ID: "s1",
+		Blocks: []engine.CodeNode{
+			{Kind: engine.HatStart, Text: ""},
+			{Kind: engine.SetMessage, Text: "Cześć z pokoju"},
+			{Kind: engine.AddScore, Amount: 10},
+			{Kind: engine.HatCoin},
+		},
+	}, {
+		ID: "s2",
+		Blocks: []engine.CodeNode{
+			{Kind: engine.HatCoin},
+			{Kind: engine.AddScore, Amount: 10},
+			{Kind: engine.SetMessage, Text: "Moneta!"},
+		},
+	}}
+	h.Handle(a, inbound{Type: "host", Name: "Parkour", SizeX: 2, SizeY: 2, SizeZ: 2, Blocks: []int{0, 0, 0, 0, 0, 0, 0, 0}, Scripts: scripts}, 0, "")
+	room := lastOfType(drain(a), "room")
+	if room == nil {
+		t.Fatal("no room")
+	}
+	if _, ok := room["scripts"]; !ok {
+		t.Fatalf("host room missing scripts: %#v", room)
+	}
+	code, _ := room["code"].(string)
+	h.Handle(b, inbound{Type: "join", Code: code}, 0, "")
+	joined := lastOfType(drain(b), "room")
+	if joined == nil {
+		t.Fatal("no join room")
+	}
+	raw, _ := json.Marshal(joined["scripts"])
+	var got []engine.ScriptStack
+	_ = json.Unmarshal(raw, &got)
+	if len(got) != 2 {
+		t.Fatalf("joiner scripts %d %s", len(got), raw)
+	}
+	if got[1].Blocks[0].Kind != engine.HatCoin {
+		t.Fatalf("coin hat missing: %#v", got[1])
+	}
+	if asBoolMap(joined["host"]) {
+		t.Fatal("joiner should not be host")
+	}
+
+	h.Handle(b, inbound{Type: "scripts", Scripts: []engine.ScriptStack{{ID: "x", Blocks: []engine.CodeNode{{Kind: engine.Win}}}}}, 0, "")
+	if lastOfType(drain(b), "error") == nil {
+		t.Fatal("joiner must not change room scripts")
+	}
+
+	updated := []engine.ScriptStack{{
+		ID: "s3",
+		Blocks: []engine.CodeNode{
+			{Kind: engine.HatGoal},
+			{Kind: engine.Win},
+		},
+	}}
+	h.Handle(a, inbound{Type: "scripts", Scripts: updated}, 0, "")
+	push := lastOfType(drain(b), "scripts")
+	if push == nil {
+		t.Fatal("joiner did not get script update")
+	}
+
+	h.Handle(a, inbound{Type: "scriptEvent", Kind: "coin", X: 1, Y: 0, Z: 0}, 0, "")
+	after := drain(b)
+	if lastOfType(after, "scriptFx") == nil {
+		t.Fatal("no scriptFx")
+	}
+	place := lastOfType(after, "place")
+	if place == nil || place["id"].(float64) != 0 {
+		t.Fatalf("coin should clear block, got %#v", place)
+	}
+
+	api := EvalScripts(updated, engine.ScriptEvent{Kind: "goal"})
+	if !api.won {
+		t.Fatal("expected server eval win")
+	}
+}
+
+func asBoolMap(v any) bool {
+	b, _ := v.(bool)
+	return b
 }
