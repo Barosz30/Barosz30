@@ -149,14 +149,20 @@ export class BoxelRuntime {
     this.scene.add(this.ghost)
 
     this.playerMesh = new Mesh(
-      new BoxGeometry(0.55, 0.8, 0.55),
+      new BoxGeometry(0.55, 0.62, 0.55),
       new MeshLambertMaterial({ color: 0xff6b3d }),
     )
-    this.eyeL = new Mesh(new BoxGeometry(0.12, 0.12, 0.08), new MeshLambertMaterial({ color: 0x1a1020 }))
-    this.eyeR = new Mesh(new BoxGeometry(0.12, 0.12, 0.08), new MeshLambertMaterial({ color: 0x1a1020 }))
-    this.eyeL.position.set(-0.12, 0.18, -0.26)
-    this.eyeR.position.set(0.12, 0.18, -0.26)
-    this.playerMesh.add(this.eyeL, this.eyeR)
+    const head = new Mesh(
+      new BoxGeometry(0.48, 0.42, 0.48),
+      new MeshLambertMaterial({ color: 0xffd36a }),
+    )
+    head.position.y = 0.52
+    this.eyeL = new Mesh(new BoxGeometry(0.1, 0.1, 0.08), new MeshLambertMaterial({ color: 0x1a1020 }))
+    this.eyeR = new Mesh(new BoxGeometry(0.1, 0.1, 0.08), new MeshLambertMaterial({ color: 0x1a1020 }))
+    this.eyeL.position.set(-0.12, 0.08, -0.22)
+    this.eyeR.position.set(0.12, 0.08, -0.22)
+    head.add(this.eyeL, this.eyeR)
+    this.playerMesh.add(head)
     this.scene.add(this.playerMesh)
 
     this.controls = new OrbitControls(this.camera, canvas)

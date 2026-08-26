@@ -85,7 +85,7 @@ export default function App() {
 
   const flash = (text: string) => {
     setToast(text)
-    window.setTimeout(() => setToast(''), 1800)
+    window.setTimeout(() => setToast(''), 2600)
   }
 
   const loadSaved = (data: ReturnType<typeof currentSave>) => {

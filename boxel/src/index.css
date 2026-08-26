@@ -256,18 +256,30 @@ button:active {
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 8;
   display: flex;
-  gap: 10px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
-  text-shadow: 3px 3px 0 #0d0814;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: Nunito, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  background: #1a1228ee;
+  color: #fff6e8;
+  border: 3px solid #0d0814;
+  box-shadow: 4px 4px 0 #0d0814;
+  padding: 8px 10px;
+}
+
+.hud-lives {
+  color: #ff6b7d;
 }
 
 .hud-msg {
   position: absolute;
-  top: 42px;
+  top: 54px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 8;
   background: var(--accent);
   color: #1a1228;
   border: 3px solid var(--line);
@@ -284,6 +296,7 @@ button:active {
   justify-content: space-between;
   align-items: flex-end;
   pointer-events: none;
+  z-index: 9;
 }
 
 .dpad,
@@ -299,8 +312,10 @@ button:active {
 }
 
 .pad {
-  background: #2a1d42cc;
+  background: #2a1d42ee;
   font-size: 18px;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .pad.up { grid-column: 2; grid-row: 1; }
@@ -309,13 +324,16 @@ button:active {
 .pad.down { grid-column: 2; grid-row: 3; }
 
 .jump-btn {
-  width: 92px;
-  height: 92px;
+  width: 96px;
+  height: 96px;
   border-radius: 0;
   background: var(--play);
   color: #102214;
   font-family: 'Press Start 2P', monospace;
   font-size: 12px;
+  touch-action: manipulation;
+  user-select: none;
+  z-index: 9;
 }
 
 .result-card {
@@ -478,15 +496,16 @@ button:active {
 
 .toast {
   position: fixed;
-  bottom: 16px;
+  top: 76px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--accent);
   color: #1a1228;
   border: 3px solid var(--line);
   box-shadow: var(--shadow);
-  padding: 8px 14px;
-  z-index: 20;
+  padding: 10px 16px;
+  z-index: 40;
+  font-weight: 900;
 }
 
 .modal {
