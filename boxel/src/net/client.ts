@@ -30,9 +30,9 @@ export function saveProfile(profile: Identity): void {
 
 export function serverUrl(): string {
   const injected = (window as unknown as { boxelApp?: { serverUrl?: string } }).boxelApp?.serverUrl
-  if (injected) return injected
+  if (injected) return injected.replace(/\/$/, '')
   const params = new URLSearchParams(window.location.search)
-  if (params.get('ws')) return params.get('ws') as string
+  if (params.get('ws')) return String(params.get('ws')).replace(/\/$/, '')
   const host = window.location.hostname || '127.0.0.1'
   return `ws://${host}:8787`
 }
