@@ -185,6 +185,15 @@ button:active {
   grid-template-columns: 1fr;
 }
 
+.app.with-social.mode-build .stage {
+  grid-template-columns: 220px 1fr 270px;
+}
+
+.app.with-social.mode-play .stage,
+.app.with-social.mode-code .stage {
+  grid-template-columns: 1fr 270px;
+}
+
 .palette {
   background: var(--bg-2);
   border-right: 4px solid var(--line);
@@ -537,8 +546,148 @@ button:active {
   padding: 8px 14px;
 }
 
+.room-chip {
+  background: var(--play);
+  color: #102214;
+  border: 3px solid var(--line);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.social {
+  background: var(--bg-2);
+  border-left: 4px solid var(--line);
+  padding: 10px;
+  overflow: auto;
+}
+
+.social h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  margin: 12px 0 8px;
+  color: var(--accent);
+}
+
+.net-dot { font-size: 12px; color: var(--muted); }
+.net-dot.on { color: var(--play); }
+.net-dot.off { color: var(--danger); }
+
+.social-field,
+.add-friend,
+.room-actions form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.social input {
+  background: #1a1228;
+  color: var(--ink);
+  border: 3px solid var(--line);
+  padding: 6px;
+}
+
+.friend-code {
+  background: #1a1228;
+  border: 3px solid var(--line);
+  padding: 8px;
+  margin: 8px 0;
+}
+
+.friend-code b {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.friend-list,
+.room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.friend-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  border: 3px solid var(--line);
+  padding: 6px;
+  margin-bottom: 6px;
+  background: #3a2d55;
+}
+
+.friend-list small,
+.muted {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.friend-actions,
+.room-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.friend-actions button,
+.room-actions button,
+.add-friend button {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.chat-dock {
+  border-top: 4px solid var(--line);
+  background: #1e1630;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  max-height: 28vh;
+}
+
+.chat-log {
+  max-height: 90px;
+  overflow: auto;
+  font-size: 13px;
+}
+
+.chat-log .whisper { color: #ff9fd0; }
+
+.chat-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chat-presets button {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: #4a3a68;
+}
+
+.chat-form {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-form input {
+  flex: 1;
+  background: #1a1228;
+  color: var(--ink);
+  border: 3px solid var(--line);
+  padding: 6px;
+}
+
 @media (max-width: 900px) {
-  .stage {
+  .stage,
+  .app.with-social.mode-build .stage,
+  .app.with-social.mode-play .stage,
+  .app.with-social.mode-code .stage {
     grid-template-columns: 1fr;
   }
   .palette {
@@ -546,8 +695,14 @@ button:active {
     border-bottom: 4px solid var(--line);
     max-height: 28vh;
   }
+  .social {
+    border-left: 0;
+    border-top: 4px solid var(--line);
+    max-height: 32vh;
+  }
   .code-panel {
     grid-template-columns: 1fr;
     height: 50vh;
   }
 }
+

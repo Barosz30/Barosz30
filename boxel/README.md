@@ -1,37 +1,41 @@
 # BOXEL
 
-MVP studia do **grania i tworzenia** kwadratowych gier. Wygląd OG (grube klocki, ostre krawędzie), programowanie jak w Scratchu.
+Aplikacja desktopowa do **budowania i grania** w kwadratowe światy z klockami (styl OG) i programowaniem jak w Scratchu. Jest multiplayer, czat i znajomi.
 
-Otwórz folder `boxel`, zainstaluj zależności i odpal studio:
+## Uruchomienie (aplikacja, nie strona)
 
 ```bash
 cd boxel
 npm install
-npm run dev
+npm run app
 ```
 
-Wejdź na http://localhost:5173
+To odpala:
 
-## Co już jest
+1. serwer pokoi (`ws://127.0.0.1:8787`)
+2. silnik UI
+3. **okno Electron** — BOXEL → Nowe okno (drugi gracz) otwiera drugie konto na tym samym PC
 
-- Edytor świata 24×16×24 z klockami: trawa, lawa, lód, sprężyna, monety, meta…
-- Tryb **Graj**: WASD / strzałki, spacja, pad na ekranie
-- Tryb **Klocki**: zdarzenia i akcje (punkty, wiadomość, wygrana, pętla, „jeśli punkty ≥”)
-- Szablony: Parkour monetkowy, Piaskownica, Arena
-- Zapis w przeglądarce + plik `.boxel.json`
-- Cofnij (Ctrl+Z), limity skryptów (żeby pętla dziecka nie zawiesiła gry)
+Bez Electrona (tylko do testów silnika): `npm run server` i `npm run dev`.
 
-## Sterowanie
+## Multiplayer, znajomi, czat
 
-| Akcja | Jak |
-| --- | --- |
-| Stawianie | lewy przycisk myszy |
-| Kasowanie | prawy przycisk albo gumka |
-| Obrót kamery | przeciągnij lewy przycisk |
-| Skok | spacja / przycisk SKOK |
-| Klocki 1–9 | klawisze 1–9, `0` lub `X` = gumka |
+- Każdy ma **kod znajomego** `BX-XXXXXX`. Wpisz kod kolegi i kliknij Dodaj.
+- **Załóż pokój** — dostajesz kod 4-cyfrowy. Znajomy klika Zaproś albo wpisuje kod.
+- W pokoju widać innych graczy (kolorowe kostki), wspólne stawianie klocków i czat.
+- Czat pokoju + szept tylko do znajomych. Linki, Discord i wulgaryzmy są blokowane. Są gotowe bąbelki: Cześć!, Chodź tu!, Pomocy!…
 
-Szablon **Parkour monetkowy** ma gotowe skrypty: zbierz 3 monety (30 pkt) i dobiegnij do złotej flagi.
+## Język i prędkość
+
+Nie przerzucamy całego studia na Pythona ani C++.
+
+| Warstwa | Język | Dlaczego |
+| --- | --- | --- |
+| Studio + klocki + voxel 24³ | TypeScript | To nie jest wąskie gardło. Test `physics speed`: 2000 klatek fizyki w << 250 ms. |
+| Okno aplikacji | Electron (Chromium) | To jest **aplikacja**, nie karta przeglądarki. Godot/C# ma sens przy większych światach i 50+ graczach — wtedy się przenosi silnik, nie teraz. |
+| Pokoje / czat / sync | Node WebSocket | 8 graczy w pokoju, 15 Hz pozycji, delty klocków. Rust wszedłby przy tysiącach połączeń. |
+
+HUD pokazuje **fps** na żywo. Jeśli spada poniżej ~40 przy tej wielkości mapy, wtedy ruszamy meshing (greedy mesh) albo Godota — nie sam język skryptów.
 
 ## Testy
 

@@ -35,6 +35,7 @@ export function Hud({ hud, playing, onInput, onJump, onReplay, onStop }: HudProp
         <span className="hud-lives" data-testid="hud-lives">
           ŻYCIA {hud.lives}
         </span>
+        {hud.debug ? <span data-testid="hud-fps">{hud.debug}</span> : null}
       </div>
       {hud.message ? <div className="hud-msg">{hud.message}</div> : null}
 

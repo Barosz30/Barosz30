@@ -1,10 +1,13 @@
 {
   "name": "boxel",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
+    "server": "tsx server/index.ts",
+    "app": "concurrently -k \"npm:server\" \"npm:dev\" \"wait-on http://127.0.0.1:5173 tcp:8787 && electron .\"",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
@@ -13,17 +16,23 @@
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/three": "^0.185.4",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.7",
     "oxlint": "^1.79.0",
+    "tsx": "^4.21.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "wait-on": "^9.0.1"
   }
 }

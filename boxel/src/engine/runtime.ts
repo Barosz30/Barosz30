@@ -54,6 +54,18 @@ const DUMMY = new Object3D()
 export interface RuntimeCallbacks {
   onHud: (hud: HudState) => void
   onBrush?: (id: number) => void
+  onEdit?: (x: number, y: number, z: number, id: number) => void
+  onPos?: (x: number, y: number, z: number, yaw: number) => void
+}
+
+export interface RemoteAvatar {
+  id: string
+  name: string
+  color: string
+  x: number
+  y: number
+  z: number
+  yaw: number
 }
 
 interface Edit {
@@ -97,6 +109,10 @@ export class BoxelRuntime {
   private lastHud = ''
   private ro: ResizeObserver
   private jumpQueued = false
+  private remotes = new Map<string, Mesh>()
+  private lastPosSend = 0
+  private frames = 0
+  private fpsAt = 0
 
   constructor(canvas: HTMLCanvasElement, world: World, callbacks: RuntimeCallbacks) {
     this.canvas = canvas
@@ -256,6 +272,43 @@ export class BoxelRuntime {
     this.pushHud()
   }
 
+  applyNetworkEdit(x: number, y: number, z: number, id: number): void {
+    if (!inBounds(this.world, x, y, z)) return
+    setBlock(this.world, x, y, z, id)
+    this.rebuild()
+    this.syncSpawnFromWorld()
+  }
+
+  applyWorldData(sizeX: number, sizeY: number, sizeZ: number, blocks: number[]): void {
+    this.world.sizeX = sizeX
+    this.world.sizeY = sizeY
+    this.world.sizeZ = sizeZ
+    this.world.blocks = Uint8Array.from(blocks)
+    this.undoStack = []
+    this.rebuild()
+    this.syncSpawnFromWorld()
+    this.pushHud()
+  }
+
+  setRemotes(list: RemoteAvatar[]): void {
+    const seen = new Set(list.map((p) => p.id))
+    for (const [id, mesh] of this.remotes) {
+      if (seen.has(id)) continue
+      this.scene.remove(mesh)
+      this.remotes.delete(id)
+    }
+    for (const p of list) {
+      let mesh = this.remotes.get(p.id)
+      if (!mesh) {
+        mesh = makeAvatar(p.color)
+        this.scene.add(mesh)
+        this.remotes.set(p.id, mesh)
+      }
+      mesh.position.set(p.x, p.y + 0.4, p.z)
+      mesh.rotation.y = p.yaw
+    }
+  }
+
   stop(next: StudioMode = 'build'): void {
     if (this.snapshot) {
       copyWorld(this.snapshot, this.world)
@@ -275,6 +328,8 @@ export class BoxelRuntime {
     cancelAnimationFrame(this.raf)
     this.ro.disconnect()
     this.unbind()
+    for (const mesh of this.remotes.values()) this.scene.remove(mesh)
+    this.remotes.clear()
     this.controls.dispose()
     this.renderer.dispose()
     disposeTextures()
@@ -390,6 +445,17 @@ export class BoxelRuntime {
 
     this.updatePlayerMesh()
     this.animateCoins(dt)
+    this.frames += 1
+    if (now - this.fpsAt > 500) {
+      const fps = Math.round((this.frames * 1000) / Math.max(1, now - this.fpsAt))
+      this.frames = 0
+      this.fpsAt = now
+      this.pushHud(fps)
+    }
+    if (this.callbacks.onPos && now - this.lastPosSend > 70) {
+      this.lastPosSend = now
+      this.callbacks.onPos(this.player.x, this.player.y, this.player.z, this.player.yaw)
+    }
 
     if (this.player.message && now > this.hudMessageUntil && this.player.phase === 'playing') {
       this.player.message = ''
@@ -539,6 +605,7 @@ export class BoxelRuntime {
     if (this.undoStack.length > 80) this.undoStack.shift()
     this.rebuild()
     this.syncSpawnFromWorld()
+    this.callbacks.onEdit?.(x, y, z, id)
   }
 
   private pick(): { hit: [number, number, number] | null; prev: [number, number, number] | null } {
@@ -667,7 +734,10 @@ export class BoxelRuntime {
     this.renderer.setSize(w, h, false)
   }
 
-  private pushHud(): void {
+  private lastFps = 0
+
+  private pushHud(fps?: number): void {
+    if (fps !== undefined) this.lastFps = fps
     const hud: HudState = {
       mode: this.mode,
       score: this.player.score,
@@ -675,6 +745,7 @@ export class BoxelRuntime {
       lives: this.player.lives,
       message: this.player.message,
       phase: this.mode === 'play' ? this.player.phase : 'build',
+      debug: this.lastFps ? `${this.lastFps} fps` : undefined,
     }
     const s = JSON.stringify(hud)
     if (s === this.lastHud) return
@@ -685,4 +756,24 @@ export class BoxelRuntime {
 
 function emptyInput(): InputState {
   return { forward: false, back: false, left: false, right: false, jump: false }
+}
+
+function makeAvatar(color: string): Mesh {
+  const body = new Mesh(
+    new BoxGeometry(0.55, 0.62, 0.55),
+    new MeshLambertMaterial({ color }),
+  )
+  const head = new Mesh(
+    new BoxGeometry(0.48, 0.42, 0.48),
+    new MeshLambertMaterial({ color: 0xfff6e8 }),
+  )
+  head.position.y = 0.52
+  const eye = new MeshLambertMaterial({ color: 0x1a1020 })
+  const eyeL = new Mesh(new BoxGeometry(0.1, 0.1, 0.08), eye)
+  const eyeR = new Mesh(new BoxGeometry(0.1, 0.1, 0.08), eye)
+  eyeL.position.set(-0.12, 0.08, -0.22)
+  eyeR.position.set(0.12, 0.08, -0.22)
+  head.add(eyeL, eyeR)
+  body.add(head)
+  return body
 }

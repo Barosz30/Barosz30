@@ -13,6 +13,10 @@ interface ToolbarProps {
   onOpenFile: (file: File) => void
   onUndo: () => void
   onHelp: () => void
+  onSocial: () => void
+  social: boolean
+  roomCode: string | null
+  fps?: string
 }
 
 export function Toolbar({
@@ -27,6 +31,10 @@ export function Toolbar({
   onOpenFile,
   onUndo,
   onHelp,
+  onSocial,
+  social,
+  roomCode,
+  fps,
 }: ToolbarProps) {
   return (
     <header className="toolbar">
@@ -34,7 +42,7 @@ export function Toolbar({
         <span className="logo-cube" aria-hidden="true" />
         <div>
           <h1>BOXEL</h1>
-          <p>Studio klocków</p>
+          <p>Aplikacja klocków {fps ? `· ${fps}` : ''}</p>
         </div>
       </div>
 
@@ -117,6 +125,10 @@ export function Toolbar({
             }}
           />
         </label>
+        <button type="button" className={social ? 'on' : ''} onClick={onSocial} data-testid="toggle-social">
+          Znajomi
+        </button>
+        {roomCode ? <span className="room-chip">Pokój {roomCode}</span> : null}
         <button type="button" className="help-btn" onClick={onHelp} data-testid="help">
           ?
         </button>
